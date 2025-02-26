@@ -128,7 +128,7 @@ export default function Home() {
   });
 
   // Add this state for transaction display
-  const [transactionsToShow, setTransactionsToShow] = useState(15);
+  const [transactionsToShow, setTransactionsToShow] = useState(5);
 
   // Fetch Plaid Link Token on Load
   useEffect(() => {
@@ -334,7 +334,7 @@ export default function Home() {
 
   // Add this function to handle showing more transactions
   const handleShowMoreTransactions = () => {
-    setTransactionsToShow(prev => prev + 15);
+    setTransactionsToShow(prev => prev + 5);
   };
 
   return (
@@ -473,38 +473,53 @@ export default function Home() {
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
                       </div>
                     ) : Array.isArray(transactions) && transactions.length > 0 ? (
-                      <div className="space-y-4">
-                        {Object.entries(groupedTransactions)
-                          .sort((a, b) => new Date(b[0]) - new Date(a[0]))
-                          .map(([date, dayTransactions]) => (
-                            <div key={date}>
-                              <h4 className="text-sm font-medium text-gray-500 mb-2">
-                                {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                              </h4>
-                              <div className="space-y-2">
-                                {dayTransactions.map((transaction, idx) => (
-                                  <div key={idx} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                                    <div className="flex items-center">
-                                      <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3" 
-                                           style={{ backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6'][idx % 3] + '20' }}>
-                                        <div className="text-lg" style={{ color: ['#3b82f6', '#10b981', '#8b5cf6'][idx % 3] }}>
-                                          {getCategoryIcon(transaction.category)}
+                      <>
+                        <div className="space-y-4">
+                          {Object.entries(groupedTransactions)
+                            .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+                            .slice(0, transactionsToShow)
+                            .map(([date, dayTransactions]) => (
+                              <div key={date}>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">
+                                  {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                </h4>
+                                <div className="space-y-2">
+                                  {dayTransactions.map((transaction, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                                      <div className="flex items-center">
+                                        <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3" 
+                                             style={{ backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6'][idx % 3] + '20' }}>
+                                          <div className="text-lg" style={{ color: ['#3b82f6', '#10b981', '#8b5cf6'][idx % 3] }}>
+                                            {getCategoryIcon(transaction.category)}
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <p className="text-sm font-medium text-gray-800">{transaction.name}</p>
+                                          <p className="text-xs text-gray-500">{transaction.category}</p>
                                         </div>
                                       </div>
-                                      <div>
-                                        <p className="text-sm font-medium text-gray-800">{transaction.name}</p>
-                                          <p className="text-xs text-gray-500">{transaction.category}</p>
-                                      </div>
+                                      <span className={`text-sm font-medium ${transaction.amount < 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {transaction.amount < 0 ? '+' : '-'}${Math.abs(transaction.amount).toFixed(2)}
+                                      </span>
                                     </div>
-                                    <span className={`text-sm font-medium ${transaction.amount < 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                      {transaction.amount < 0 ? '+' : '-'}${Math.abs(transaction.amount).toFixed(2)}
-                                    </span>
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          ))}
-                      </div>
+                            ))}
+                        </div>
+                        
+                        {/* Show More button - only display if there are more transactions to show */}
+                        {Object.keys(groupedTransactions).length > transactionsToShow && (
+                          <div className="mt-6 text-center">
+                            <button 
+                              onClick={handleShowMoreTransactions}
+                              className="px-4 py-2 text-sm font-medium text-teal-600 border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors"
+                            >
+                              Show More Transactions
+                            </button>
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <div className="text-center py-8">
                         <p className="text-gray-500">No transactions found. Connect your account to see your recent transactions.</p>
@@ -938,7 +953,7 @@ export default function Home() {
                         fill="#4285F4"
                       />
                       <path
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-2.86 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
                         fill="#34A853"
                       />
                       <path
