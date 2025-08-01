@@ -1,9 +1,6 @@
 import { Configuration, PlaidApi, PlaidEnvironments } from "plaid";
-
-console.log("DEBUG: Loading Plaid credentials...");
-console.log("PLAID_CLIENT_ID:", process.env.PLAID_CLIENT_ID);
-console.log("PLAID_SECRET:", process.env.PLAID_SECRET);
-console.log("PLAID_ENV:", process.env.PLAID_ENV);
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../[...nextauth]";
 
 const plaidConfig = new Configuration({
   basePath: PlaidEnvironments[process.env.PLAID_ENV],
@@ -20,30 +17,27 @@ const plaidClient = new PlaidApi(plaidConfig);
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  console.log("Creating Plaid Link Token...");
-  console.log("Request Payload:", {
-    client_id: process.env.PLAID_CLIENT_ID,
-    secret: process.env.PLAID_SECRET,
-    user: { client_user_id: "user-id-123" },
-    client_name: "MoneyMojo",
-    products: ["transactions"],
-    country_codes: ["US"],
-    language: "en",
-  });
-
   try {
+    // Get the authenticated user session
+    const session = await getServerSession(req, res, authOptions);
+    
+    if (!session) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const userId = session.user.email || session.user.id;
+
     const response = await plaidClient.linkTokenCreate({
-      user: { client_user_id: "user-id-123" },
+      user: { client_user_id: userId },
       client_name: "MoneyMojo",
       products: ["transactions"],
       country_codes: ["US"],
       language: "en",
     });
 
-    console.log("Plaid Response:", response.data);
     res.status(200).json(response.data);
   } catch (error) {
-    console.error("Plaid Error:", error);
-    res.status(500).json({ error: error.message || "Plaid error" });
+    console.error("Plaid Link Token Error:", error.message);
+    res.status(500).json({ error: "Failed to create link token" });
   }
 }
